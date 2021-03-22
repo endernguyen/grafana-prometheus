@@ -1,0 +1,40 @@
+version: '3.4'
+services: 
+    prometheus:
+      build:
+        context: ./prometheus
+      volumes:
+        - ./prometheus-data
+      ports:
+        - 9090:9090
+      depends_on:
+        - cadvisor
+
+    
+    grafana:
+      build: 
+        context: ./grafana
+      volumes:
+        - ./data:/var/lib/grafana
+      environment:
+        - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+        - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+        - GF_USERS_ALLOW_SIGN_UP=false
+      restart: unless-stopped
+      ports: 
+        - 3000:3000
+      depends_on:
+        - prometheus
+
+        
+    cadvisor:
+      image: gcr.io/google-containers/cadvisor:latest
+      container_name: cadvisor
+      ports:
+        - 8080:8080
+      volumes:
+        - /:/rootfs:ro
+        - /var/run:/var/run:rw
+        - /sys:/sys:ro
+        - /var/lib/docker/:/var/lib/docker:ro
+    
